@@ -1,0 +1,41 @@
+﻿<!--Delete modal-->
+<div class="modal fade" id="deleteConfirmation" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="staticBackdropLabel">@Title</h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+				@Description
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-lg btn-secondary" data-bs-dismiss="modal" @onclick=@(() => ConfirmDelete(false))>Close</button>
+                <button type="button" class="btn btn-lg btn-danger" @onclick=@(() => ConfirmDelete(true))>@ButtonText</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+
+    [Parameter]
+    public string Title { get; set; }
+
+    [Parameter]
+    public string Description { get; set; }
+
+    [Parameter]
+    public string ButtonText { get; set; }
+    //EventCallback paramter to notify parent component whether to delete or not
+    [Parameter]
+    public EventCallback<bool>  isDeleteConfirmed { get; set; }
+
+
+	//EventCallback function to trigger the parent component function
+    public async Task ConfirmDelete(bool value)
+    {
+        await isDeleteConfirmed.InvokeAsync(value);
+	}
+
+}

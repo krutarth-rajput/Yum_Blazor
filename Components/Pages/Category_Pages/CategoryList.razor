@@ -1,0 +1,129 @@
+﻿@page "/category"
+@inject ICategoryRepository _categoryRepository
+@inject IJSRuntime _js
+
+<DeleteConfirmationModal isDeleteConfirmed="DeleteCategory" Title="Delete Category" Description="Are you sure you want to delete this cateogory ?" ButtonText="Delete Category"></DeleteConfirmationModal>
+@if (IsProcessing)
+{
+	<div class=" position-absolute w-75 h-75 d-flex flex-column align-items-center bg-white justify-content-center">
+		<img src="./images/loading.gif" alt="Loading..." />
+	</div>
+}
+else
+{
+	<div class="card shadow border-0 m-4">
+		<div class="card-header bg-black bg-gradient ml-0 py-3">
+			<div class="row">
+				<div class="col-12 text-center">
+					<h2 class="text-white py-2">Category List</h2>
+				</div>
+			</div>
+		</div>
+		<div class="card-body p-4">
+			<div class="row pb-3">
+				<div class="col-12 text-end">
+					<a href="category/create" class="btn btn-lg btn-secondary" style="width:250px;">
+						<i class="bi bi-plus-square"></i> Add New Category
+					</a>
+				</div>
+			</div>
+			@if (Categories.Any())
+			{
+				<table class="table table-bordered table-striped">
+					<thead>
+						<tr>
+							<th>Name</th>
+							<th></th>
+						</tr>
+					</thead>
+					<tbody>
+						@foreach (var category in Categories)
+						{
+							<tr>
+								<td>
+									@category.Name
+								</td>
+								<td>
+									<a href="@($"category/update/{category.Id}")" class="btn btn-primary">
+										<i class="bi bi-pencil-square"></i> Edit
+									</a>
+									<button class="btn btn-danger" @onclick="() => HandleDelete(category.Id)">
+										<i class="bi bi-trash3"></i> Delete
+									</button>
+								</td>
+							</tr>
+						}
+					</tbody>
+				</table>
+			}
+	</div>
+</div>
+
+@code {
+	public bool IsProcessing { get; set; } = false;
+
+	public int DeleteId { get; set; } = 0;
+
+	public IEnumerable<Category> Categories { get; set; } = new List<Category>();
+
+	protected override async Task OnInitializedAsync()
+	{
+		IsProcessing = true;
+		await Task.Delay(1000);
+		await LoadCategories();
+		IsProcessing = false;
+	}
+
+	public async Task LoadCategories()
+	{
+		IsProcessing = true;
+		Categories = await _categoryRepository.GetAllAsync();
+		IsProcessing = false;
+	}
+
+	/*protected override async Task OnAfterRenderAsync(bool firstRender)
+	{
+		if(firstRender)
+		{
+			IsProcessing = true;
+			await LoadCategories();
+			IsProcessing = false;
+		}
+
+	}*/
+
+	//method to open the BS modal
+	public async Task HandleDelete(int id)
+	{
+		DeleteId = id;
+		await _js.InvokeVoidAsync("showDeleteConfirmationModal");
+	}
+
+	//method called when user interacts with the BS modal
+	public async Task DeleteCategory(bool isDeleteConfirmed)
+	{
+		await _js.InvokeVoidAsync("hideDeleteConfirmationModal");
+		IsProcessing = true;
+		if (isDeleteConfirmed && DeleteId > 0)
+		{
+			var result = await _categoryRepository.DeleteAsync(DeleteId);
+			if (result)
+			{
+				await _js.ToastrSuccess("Category deleted successfully.");
+			}
+			else
+			{
+				await _js.ToastrSuccess("Error encountered while deleting category.");
+			}
+
+			await LoadCategories();
+			DeleteId = 0;
+		}
+		else
+		{
+			DeleteId = 0;
+		}
+		IsProcessing = false;
+	}
+}
+}
